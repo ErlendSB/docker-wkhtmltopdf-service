@@ -13,6 +13,8 @@ Do a HTTP POST to ip address (port 9090) with the following json:
 }
 
 ```
+The Html field will be used if supplied. Omit it if you want to use the Url instead.
+
 
 # License
 

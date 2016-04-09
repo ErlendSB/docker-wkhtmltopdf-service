@@ -7,10 +7,14 @@ import (
 	"os/exec"
 	"encoding/json"
 	"strings"
+	"strconv"
+	"image/png"
+	"image/jpeg"
+	"bytes"
 )
 
 func main() {
-	const bindAddress = ":3000"
+	const bindAddress = ":9090"
 	http.HandleFunc("/", requestHandler)
 	fmt.Println("Http server listening on", bindAddress)
 	http.ListenAndServe(bindAddress, nil)
@@ -19,6 +23,7 @@ func main() {
 type documentRequest struct {
 	Url string
 	Output string
+	Html string
 	// TODO: whitelist options that can be passed to avoid errors,
 	// log warning when different options get passed
 	Options map[string]interface{}
@@ -52,7 +57,7 @@ func requestHandler(response http.ResponseWriter, request *http.Request) {
 	segments := make([]string, 0)
 	for key, element := range req.Options {
 		if element == true {
-			// if it was parsed from the JSON as an actual boolean, 
+			// if it was parsed from the JSON as an actual boolean,
 			// convert to command-line single argument	(--foo)
 			segments = append(segments, fmt.Sprintf("--%v", key))
 		} else if element != false {
@@ -79,13 +84,58 @@ func requestHandler(response http.ResponseWriter, request *http.Request) {
 			programFile = "/usr/local/bin/wkhtmltopdf"
 			contentType = "application/pdf"
 	}
-	segments = append(segments, req.Url, "-")
+	if (req.Html != "") {
+		segments = append(segments, "-", "-")
+	} else {
+		segments = append(segments, req.Url, "-")
+	}
 	fmt.Println("\tRunning:", programFile, strings.Join(segments, " "))
+
 	cmd := exec.Command(programFile, segments...)
+	if (req.Html != "") {
+		cmd.Stdin = strings.NewReader(req.Html)
+	}
+
 	response.Header().Set("Content-Type", contentType)
-	cmd.Stdout = response
-	cmd.Start()
-	defer cmd.Wait()
-	// TODO: check if Stderr has anything, and issue http 500 instead.
-	logOutput(request, "200 OK")
+	output, err := cmd.CombinedOutput()
+	trimmed := cleanupOutput(output, req.Output)
+	response.Header().Set("Content-Length", strconv.Itoa(len(trimmed)))
+	response.Write(trimmed);
+	if (err != nil) {
+		logOutput(request, err.Error())
+	} else {
+		logOutput(request, "200 OK")
+	}
+
+}
+
+func cleanupOutput(img []byte, format string) []byte {
+	buf := new(bytes.Buffer)
+	switch {
+	case format == "png":
+		decoded, err := png.Decode(bytes.NewReader(img))
+		for err != nil {
+			img = img[1:]
+			if len(img) == 0 {
+				break
+			}
+			decoded, err = png.Decode(bytes.NewReader(img))
+		}
+		png.Encode(buf, decoded)
+		return buf.Bytes()
+	case format == "jpg":
+		decoded, err := jpeg.Decode(bytes.NewReader(img))
+		for err != nil {
+			img = img[1:]
+			if len(img) == 0 {
+				break
+			}
+			decoded, err = jpeg.Decode(bytes.NewReader(img))
+		}
+		jpeg.Encode(buf, decoded, nil)
+		return buf.Bytes()
+		// case format == "svg":
+		// 	return img
+	}
+	return img
 }

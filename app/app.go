@@ -72,16 +72,16 @@ func requestHandler(response http.ResponseWriter, request *http.Request) {
 	var contentType string
 	switch req.Output {
 		case "jpg":
-			programFile = "/usr/local/bin/wkhtmltoimage"
+			programFile = "/usr/bin/wkhtmltoimage"
 			contentType = "image/jpeg"
 			segments = append(segments, "--format", "jpg", "-q")
 		case "png":
-			programFile = "/usr/local/bin/wkhtmltoimage"
+			programFile = "/usr/bin/wkhtmltoimage"
 			contentType = "image/png"
 			segments = append(segments, "--format", "png", "-q")
 		default:
 			// defaults to pdf
-			programFile = "/usr/local/bin/wkhtmltopdf"
+			programFile = "/usr/bin/wkhtmltopdf"
 			contentType = "application/pdf"
 	}
 	if (req.Html != "") {

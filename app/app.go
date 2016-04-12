@@ -11,6 +11,7 @@ import (
 	"image/png"
 	"image/jpeg"
 	"bytes"
+	"time"
 )
 
 func main() {
@@ -32,7 +33,7 @@ type documentRequest struct {
 
 func logOutput(request *http.Request, message string) {
 	ip := strings.Split(request.RemoteAddr, ":")[0]
-	fmt.Println(ip, request.Method, request.URL, message)
+	fmt.Println("[",time.Now().Format(time.RFC850),"]",ip, request.Method, request.URL, message)
 }
 
 func requestHandler(response http.ResponseWriter, request *http.Request) {
@@ -89,7 +90,7 @@ func requestHandler(response http.ResponseWriter, request *http.Request) {
 	} else {
 		segments = append(segments, req.Url, "-")
 	}
-	fmt.Println("\tRunning:", programFile, strings.Join(segments, " "))
+	fmt.Println("[",time.Now().Format(time.RFC850),"]", programFile, strings.Join(segments, " "))
 
 	cmd := exec.Command(programFile, segments...)
 	if (req.Html != "") {

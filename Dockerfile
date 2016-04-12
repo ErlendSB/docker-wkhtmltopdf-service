@@ -1,6 +1,6 @@
 FROM golang:1.4
 
-MAINTAINER Potiguar Faga <potz@potz.me>
+MAINTAINER Erlend Sand Bærland <potz@potz.me>
 
 ENV WKHTML_MAJOR 0.12
 ENV WKHTML_MINOR 3
@@ -46,6 +46,6 @@ RUN mkdir /app && \
 
 USER appuser
 WORKDIR /app
-EXPOSE 3000
+EXPOSE 9090
 
 CMD [ "/app/app" ]

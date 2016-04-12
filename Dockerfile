@@ -41,11 +41,11 @@ RUN chmod -x /etc/fonts/local.conf
 RUN fc-cache / usr / share / fonts / release
 RUN mkdir /app && \
     cd /usr/src/app && \
-    go build -v -o /app/app && \
+    go build -v -o /app/worker worker.go && \
     chown -R appuser:appuser /app
 
 USER appuser
 WORKDIR /app
 EXPOSE 9090
 
-CMD [ "/app/app" ]
+CMD [ "/app/worker" ]
